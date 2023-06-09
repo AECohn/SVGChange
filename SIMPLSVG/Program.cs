@@ -4,6 +4,7 @@ using System.Drawing;
 using Svg;
 
 Color _color;
+string subfolderName;
 
 string promptMessage(string message)
 {
@@ -25,34 +26,38 @@ else
     _color = Color.FromName(response);
 }
 
-Directory.CreateDirectory($"{path}/temp");
+subfolderName = _color.Name;
+Directory.CreateDirectory($"{path}/{subfolderName}");
 
 string[] svgFiles = Directory.GetFiles(path, "*.svg");
 
 
-foreach (string file in svgFiles)
+for(int i = 0; i < svgFiles.Length; i++)
 {
-    ConvertColor(file, _color);
+    ConvertColor(svgFiles[i], _color);
 }
 
-
-static void ConvertColor(string path, Color color)
+ void ConvertColor(string filePath, Color color)
 {
-    var svgDocument = SvgDocument.Open(Path.GetFullPath(path));
+    var svgDocument = SvgDocument.Open(Path.GetFullPath(filePath));
 
-    var svgPath = svgDocument.Children[0] as SvgPath;
-    //Change color of an SVG
-    svgPath.Fill = new SvgColourServer(color);
+    if (svgDocument != null)
+    {
 
-    //save the svg to a new file
-    try
-    {
-        svgDocument.Write($"{Path.GetDirectoryName(path)}/temp/{Path.GetFileName(path)}.svg");
-    }
-    catch (Exception e)
-    {
-        Console.WriteLine(e);
-        throw;
+        var svgPath = svgDocument.Children[0] as SvgPath;
+        //Change color of an SVG
+        svgPath.Fill = new SvgColourServer(color);
+
+        //save the svg to a new file
+        try
+        {
+            svgDocument.Write($"{Path.GetDirectoryName(filePath)}/{subfolderName}/{Path.GetFileName(filePath)}");
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
     }
 }
 
