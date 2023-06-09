@@ -25,6 +25,8 @@ else
     _color = Color.FromName(response);
 }
 
+Directory.CreateDirectory($"{path}/temp");
+
 string[] svgFiles = Directory.GetFiles(path, "*.svg");
 
 
@@ -43,5 +45,15 @@ static void ConvertColor(string path, Color color)
     svgPath.Fill = new SvgColourServer(color);
 
     //save the svg to a new file
-    svgDocument.Write($"{Path.GetDirectoryName(path)}/temp_new.svg");
+    try
+    {
+        svgDocument.Write($"{Path.GetDirectoryName(path)}/temp/{Path.GetFileName(path)}.svg");
+    }
+    catch (Exception e)
+    {
+        Console.WriteLine(e);
+        throw;
+    }
 }
+
+Console.ReadKey();
