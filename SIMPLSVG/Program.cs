@@ -14,15 +14,19 @@ string PromptMessage(string message)
 var path = PromptMessage("Drag the folder containing the SVG file here, then press enter").Replace("\"", "");
 var response = PromptMessage("What color would you like to use?");
 
+Console.WriteLine("Converting...");
+
 if (response.Contains('#'))
     color = ColorTranslator.FromHtml(response);
 else
+{
     color = Color.FromName(response);
 
-if (color.IsKnownColor == false)
-{
-    Console.WriteLine("unknown color, setting to black ");
-    color = Color.Black;
+    if (color.IsKnownColor == false)
+    {
+        Console.WriteLine("unknown color, setting to black ");
+        color = Color.Black;
+    }
 }
 
 subfolderName = color.Name;
