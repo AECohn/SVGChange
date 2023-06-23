@@ -1,6 +1,7 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
 using System.Drawing;
+using System.Drawing.Imaging;
 using Svg;
 
 Color _color;
@@ -18,22 +19,20 @@ var path = promptMessage("Drag the folder containing the SVG file here, then pre
 var response = promptMessage("What color would you like to use?");
 
 
-    if (response.Contains('#'))
-    {
-        _color = ColorTranslator.FromHtml(response);
-    }
-    else
-    {
-        _color = Color.FromName(response);
-    }
+if (response.Contains('#'))
+{
+    _color = ColorTranslator.FromHtml(response);
+}
+else
+{
+    _color = Color.FromName(response);
+}
 
-    if(_color.IsKnownColor == false)
-    {
-        Console.WriteLine("unknown color, setting to black ");
-        _color = Color.Black;
-    }
-
-
+if (_color.IsKnownColor == false)
+{
+    Console.WriteLine("unknown color, setting to black ");
+    _color = Color.Black;
+}
 
 
 subfolderName = _color.Name;
@@ -44,10 +43,25 @@ string[] svgFiles = Directory.GetFiles(path, "*.svg");
 
 for (int i = 0; i < svgFiles.Length; i++)
 {
-    ConvertColor(svgFiles[i], _color);
+    {
+        var bitmap = new Bitmap(800, 600); // Placeholder dimensions
+
+        // Render the SVG onto the Bitmap
+        ConvertColor(svgFiles[i], _color).Draw(bitmap);
+
+        string outputAddress = $"{Path.GetDirectoryName(svgFiles[i])}/{subfolderName}/{Path.GetFileNameWithoutExtension(svgFiles[i])}.png";
+
+        // Save the Bitmap as a PNG file
+        bitmap.Save(outputAddress, ImageFormat.Png);
+
+        // Dispose of the Bitmap
+        bitmap.Dispose();
+        bitmap = null;
+    }
+    
 }
 
-void ConvertColor(string filePath, Color color)
+SvgDocument ConvertColor(string filePath, Color color)
 {
     var svgDocument = SvgDocument.Open(Path.GetFullPath(filePath));
 
@@ -56,17 +70,9 @@ void ConvertColor(string filePath, Color color)
         var svgPath = svgDocument.Children[0] as SvgPath;
         svgPath.Fill = new SvgColourServer(color);
         
-        
-        /*try
-        {
-            svgDocument.Write($"{Path.GetDirectoryName(filePath)}/{subfolderName}/{Path.GetFileName(filePath)}");
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
-        }*/
     }
+
+    return svgDocument;
 }
 
 Console.ReadKey();
