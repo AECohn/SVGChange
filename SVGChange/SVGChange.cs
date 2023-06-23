@@ -11,7 +11,7 @@ string PromptMessage(string message)
     return Console.ReadLine() ?? string.Empty;
 }
 
-var path = PromptMessage("Drag the folder containing the SVG file here, then press enter").Replace("\"", "");
+var path = PromptMessage("Drag the folder containing the SVG file(s) here, then press enter").Replace("\"", "");
 var response = PromptMessage("What color would you like to use?");
 
 Console.WriteLine("Converting...");
@@ -46,7 +46,7 @@ try
         ConvertColor(svgFiles[i], color).Draw(bitmap);
 
         string outputAddress =
-            $"{Path.GetDirectoryName(svgFiles[i])}/{subfolderName}/{Path.GetFileNameWithoutExtension(svgFiles[i])}.png";
+            $"{Path.GetDirectoryName(svgFiles[i])}/{subfolderName}/{Path.GetFileNameWithoutExtension(svgFiles[i])}_{color.Name}.png";
         
         bitmap.Save(outputAddress, ImageFormat.Png);
         bitmap.Dispose();
