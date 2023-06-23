@@ -1,6 +1,4 @@
-﻿// See https://aka.ms/new-console-template for more information
-
-using System.Drawing;
+﻿using System.Drawing;
 using System.Drawing.Imaging;
 using Svg;
 
@@ -13,20 +11,13 @@ string PromptMessage(string message)
     return Console.ReadLine() ?? string.Empty;
 }
 
-
 var path = PromptMessage("Drag the folder containing the SVG file here, then press enter").Replace("\"", "");
-
 var response = PromptMessage("What color would you like to use?");
 
-
 if (response.Contains('#'))
-{
     color = ColorTranslator.FromHtml(response);
-}
 else
-{
     color = Color.FromName(response);
-}
 
 if (color.IsKnownColor == false)
 {
@@ -34,41 +25,37 @@ if (color.IsKnownColor == false)
     color = Color.Black;
 }
 
-
 subfolderName = color.Name;
+
 Directory.CreateDirectory($"{path}/{subfolderName}");
 
 string[] svgFiles = Directory.GetFiles(path, "*.svg");
 
 Bitmap? bitmap = null;
+
 try
 {
     for (int i = 0; i < svgFiles.Length; i++)
     {
         bitmap = new Bitmap(800, 600); // Placeholder dimensions
-
-        // Render the SVG onto the Bitmap
+        
         ConvertColor(svgFiles[i], color).Draw(bitmap);
 
-        string outputAddress = $"{Path.GetDirectoryName(svgFiles[i])}/{subfolderName}/{Path.GetFileNameWithoutExtension(svgFiles[i])}.png";
-
-        // Save the Bitmap as a PNG file
+        string outputAddress =
+            $"{Path.GetDirectoryName(svgFiles[i])}/{subfolderName}/{Path.GetFileNameWithoutExtension(svgFiles[i])}.png";
+        
         bitmap.Save(outputAddress, ImageFormat.Png);
-
-        // Dispose of the Bitmap
         bitmap.Dispose();
         bitmap = null;
     }
 }
 finally
 {
-    // Dispose of the Bitmap if an exception occurs
-    bitmap?.Dispose();
+    bitmap?.Dispose(); // Dispose of the Bitmap if an exception occurs
 }
 
 SvgDocument ConvertColor(string filePath, Color newColor)
 {
- 
     var svgDocument = SvgDocument.Open(Path.GetFullPath(filePath));
 
     if (svgDocument != null)
