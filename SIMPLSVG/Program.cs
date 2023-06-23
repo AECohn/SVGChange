@@ -57,7 +57,7 @@ void ConvertColor(string filePath, Color color)
         svgPath.Fill = new SvgColourServer(color);
         
         
-        try
+        /*try
         {
             svgDocument.Write($"{Path.GetDirectoryName(filePath)}/{subfolderName}/{Path.GetFileName(filePath)}");
         }
@@ -65,7 +65,7 @@ void ConvertColor(string filePath, Color color)
         {
             Console.WriteLine(e);
             throw;
-        }
+        }*/
     }
 }
 
