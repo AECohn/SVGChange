@@ -41,13 +41,16 @@ try
 {
     for (int i = 0; i < svgFiles.Length; i++)
     {
-        bitmap = new Bitmap(800, 600); // Placeholder dimensions
-        
+        SvgDocument svgDocument = ConvertColor(svgFiles[i], color);
+        var svgPath = svgDocument.Children[0] as SvgPath;
+        bitmap = new Bitmap((int)svgPath.Bounds.Width, (int)svgPath.Bounds.Height);
+
+
         ConvertColor(svgFiles[i], color).Draw(bitmap);
 
         string outputAddress =
             $"{Path.GetDirectoryName(svgFiles[i])}/{subfolderName}/{Path.GetFileNameWithoutExtension(svgFiles[i])}_{color.Name}.png";
-        
+
         bitmap.Save(outputAddress, ImageFormat.Png);
         bitmap.Dispose();
         bitmap = null;
@@ -61,10 +64,14 @@ finally
 SvgDocument ConvertColor(string filePath, Color newColor)
 {
     var svgDocument = SvgDocument.Open(Path.GetFullPath(filePath));
+    //get svg document dimensions in pixels
 
     if (svgDocument != null)
     {
         var svgPath = svgDocument.Children[0] as SvgPath;
+        //var Width = svgPath.Bounds.Width;
+        //var Height = svgPath.Bounds.Height; 
+
         if (svgPath != null)
         {
             svgPath.Fill = new SvgColourServer(newColor);
