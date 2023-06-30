@@ -4,6 +4,9 @@ using Svg;
 
 Color color;
 string subfolderName;
+bool customDimensions = false;
+int customWidth = 0;
+int customHeight = 0;
 
 string PromptMessage(string message)
 {
@@ -13,6 +16,15 @@ string PromptMessage(string message)
 
 var path = PromptMessage("Drag the folder containing the SVG file(s) here, then press enter").Replace("\"", "");
 var response = PromptMessage("What color would you like to use?");
+
+var format = PromptMessage("Would you like to use custom dimensions, press y for custom, or any other key for default");
+
+if(format == "y")
+{
+    customDimensions = true;
+     customWidth = Convert.ToInt32(PromptMessage("What width in pixels would you like to use?"));
+     customHeight = Convert.ToInt32(PromptMessage("What height in pixels would you like to use?"));
+}
 
 Console.WriteLine("Converting...");
 
@@ -24,6 +36,7 @@ else
 
     if (color.IsKnownColor == false)
     {
+        
         Console.WriteLine("unknown color, setting to black ");
         color = Color.Black;
     }
@@ -43,8 +56,9 @@ try
     {
         SvgDocument svgDocument = ConvertColor(svgFiles[i], color);
         var svgPath = svgDocument.Children[0] as SvgPath;
-        bitmap = new Bitmap((int)svgPath.Bounds.Width, (int)svgPath.Bounds.Height);
-
+        
+        bitmap = customDimensions? new Bitmap(customWidth, customHeight) : new Bitmap((int)svgPath.Bounds.Width, (int)svgPath.Bounds.Height);
+        
         svgDocument.Draw(bitmap);
 
         string outputAddress =
