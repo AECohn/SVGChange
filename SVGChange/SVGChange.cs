@@ -1,95 +1,107 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO;
 using Svg;
 
-Color color;
-string subfolderName;
-bool customDimensions = false;
-int customWidth = 0;
-int customHeight = 0;
-
-string PromptMessage(string message)
+class SVGChange
 {
-    Console.WriteLine(message);
-    return Console.ReadLine() ?? string.Empty;
-}
-
-var path = PromptMessage("Drag the folder containing the SVG file(s) here, then press enter").Replace("\"", "");
-var response = PromptMessage("What color would you like to use?");
-
-var format = PromptMessage("Would you like to use custom dimensions, press y for custom, or any other key for default");
-
-if(format == "y")
-{
-    customDimensions = true;
-     customWidth = Convert.ToInt32(PromptMessage("What width in pixels would you like to use?"));
-     customHeight = Convert.ToInt32(PromptMessage("What height in pixels would you like to use?"));
-}
-
-Console.WriteLine("Converting...");
-
-if (response.Contains('#'))
-    color = ColorTranslator.FromHtml(response);
-else
-{
-    color = Color.FromName(response);
-
-    if (color.IsKnownColor == false)
+    static void Main(string[] args)
     {
-        
-        Console.WriteLine("unknown color, setting to black ");
-        color = Color.Black;
-    }
-}
-
-subfolderName = color.Name;
-
-Directory.CreateDirectory($"{path}/{subfolderName}");
-
-string[] svgFiles = Directory.GetFiles(path, "*.svg");
-
-Bitmap? bitmap = null;
-
-try
-{
-    for (int i = 0; i < svgFiles.Length; i++)
-    {
-        SvgDocument svgDocument = ConvertColor(svgFiles[i], color);
-        var svgPath = svgDocument.Children[0] as SvgPath;
-        
-        bitmap = customDimensions? new Bitmap(customWidth, customHeight) : new Bitmap((int)svgPath.Bounds.Width, (int)svgPath.Bounds.Height);
-        
-        svgDocument.Draw(bitmap);
-
-        string outputAddress =
-            $"{Path.GetDirectoryName(svgFiles[i])}/{subfolderName}/{Path.GetFileNameWithoutExtension(svgFiles[i])}_{color.Name}.png";
-
-        bitmap.Save(outputAddress, ImageFormat.Png);
-        bitmap.Dispose();
-        bitmap = null;
-    }
-}
-finally
-{
-    bitmap?.Dispose(); // Dispose of the Bitmap if an exception occurs
-}
-
-SvgDocument ConvertColor(string filePath, Color newColor)
-{
-    var svgDocument = SvgDocument.Open(Path.GetFullPath(filePath));
-
-
-    if (svgDocument != null)
-    {
-        var svgPath = svgDocument.Children[0] as SvgPath;
-        if (svgPath != null)
+        try
         {
-            svgPath.Fill = new SvgColourServer(newColor);
+            string path = PromptFolder("Drag the folder containing the SVG file(s) here, then press enter");
+            string colorInput = PromptMessage("What color would you like to use?");
+            Color color = ParseColor(colorInput);
+            bool useCustomDimensions = PromptYesNo("Would you like to use custom dimensions?");
+            int width = useCustomDimensions ? PromptInt("What width in pixels would you like to use?") : 0;
+            int height = useCustomDimensions ? PromptInt("What height in pixels would you like to use?") : 0;
+
+            Console.WriteLine("Converting...");
+
+            string subfolderName = color.Name;
+            Directory.CreateDirectory($"{path}/{subfolderName}");
+
+            string[] svgFiles = Directory.GetFiles(path, "*.svg");
+
+            for (int i = 0; i < svgFiles.Length; i++)
+            {
+                SvgDocument svgDocument = ConvertColor(svgFiles[i], color);
+                SvgPath svgPath = (SvgPath)svgDocument.Children[0];
+
+                Bitmap bitmap = useCustomDimensions ? new Bitmap(width, height) : new Bitmap((int)svgPath.Bounds.Width, (int)svgPath.Bounds.Height);
+
+                svgDocument.Draw(bitmap);
+
+                string outputAddress = $"{Path.GetDirectoryName(svgFiles[i])}/{subfolderName}/{Path.GetFileNameWithoutExtension(svgFiles[i])}_{color.Name}.png";
+                bitmap.Save(outputAddress, ImageFormat.Png);
+            }
+
+            Console.WriteLine("Done.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
         }
     }
 
-    return svgDocument;
-}
+    static string PromptFolder(string message)
+    {
+        Console.WriteLine(message);
+        return Console.ReadLine().Replace("\"", "");
+    }
 
-Console.WriteLine("Complete, press any key to exit");
-Console.ReadKey();
+    static string PromptMessage(string message)
+    {
+        Console.WriteLine(message);
+        return Console.ReadLine() ?? string.Empty;
+    }
+
+    static bool PromptYesNo(string message)
+    {
+        string response = PromptMessage($"{message} (y/n)");
+        return response.ToLower() == "y";
+    }
+
+    static int PromptInt(string message)
+    {
+        int result;
+        while (true)
+        {
+            string input = PromptMessage(message);
+            if (int.TryParse(input, out result))
+            {
+                return result;
+            }
+            Console.WriteLine("Invalid input. Please enter a valid integer.");
+        }
+    }
+
+    static Color ParseColor(string input)
+    {
+        if (input.Contains('#'))
+        {
+            return ColorTranslator.FromHtml(input);
+        }
+        else
+        {
+            Color color = Color.FromName(input);
+            if (color.IsKnownColor)
+            {
+                return color;
+            }
+            else
+            {
+                Console.WriteLine("Unknown color, setting to black.");
+                return Color.Black;
+            }
+        }
+    }
+
+    static SvgDocument ConvertColor(string svgFile, Color color)
+    {
+        SvgDocument svgDocument = SvgDocument.Open(svgFile);
+        svgDocument.Fill = new SvgColourServer(color);
+        return svgDocument;
+    }
+}
