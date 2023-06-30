@@ -10,12 +10,13 @@ class SVGChange
     {
         try
         {
-            string path = PromptFolder("Drag the folder containing the SVG file(s) here, then press enter");
-            string colorInput = PromptMessage("What color would you like to use?");
+            string path = Prompt("Drag the folder containing the SVG file(s) here, then press enter").Replace("\"", "");
+            ;
+            string colorInput = Prompt("What color would you like to use?");
             Color color = ParseColor(colorInput);
-            bool useCustomDimensions = PromptYesNo("Would you like to use custom dimensions?");
-            int width = useCustomDimensions ? PromptInt("What width in pixels would you like to use?") : 0;
-            int height = useCustomDimensions ? PromptInt("What height in pixels would you like to use?") : 0;
+            bool useCustomDimensions = Prompt("Would you like to use custom dimensions? (y/n)").ToLower() == "y"? true: false;
+            int width = useCustomDimensions ? GetDimension("What width in pixels would you like to use?") : 0;
+            int height = useCustomDimensions ? GetDimension("What height in pixels would you like to use?") : 0;
 
             Console.WriteLine("Converting...");
 
@@ -29,11 +30,14 @@ class SVGChange
                 SvgDocument svgDocument = ConvertColor(svgFiles[i], color);
                 SvgPath svgPath = (SvgPath)svgDocument.Children[0];
 
-                Bitmap bitmap = useCustomDimensions ? new Bitmap(width, height) : new Bitmap((int)svgPath.Bounds.Width, (int)svgPath.Bounds.Height);
+                Bitmap bitmap = useCustomDimensions
+                    ? new Bitmap(width, height)
+                    : new Bitmap((int)svgPath.Bounds.Width, (int)svgPath.Bounds.Height);
 
                 svgDocument.Draw(bitmap);
 
-                string outputAddress = $"{Path.GetDirectoryName(svgFiles[i])}/{subfolderName}/{Path.GetFileNameWithoutExtension(svgFiles[i])}_{color.Name}.png";
+                string outputAddress =
+                    $"{Path.GetDirectoryName(svgFiles[i])}/{subfolderName}/{Path.GetFileNameWithoutExtension(svgFiles[i])}_{color.Name}.png";
                 bitmap.Save(outputAddress, ImageFormat.Png);
             }
 
@@ -45,34 +49,22 @@ class SVGChange
         }
     }
 
-    static string PromptFolder(string message)
-    {
-        Console.WriteLine(message);
-        return Console.ReadLine().Replace("\"", "");
-    }
-
-    static string PromptMessage(string message)
+    static string Prompt(string message)
     {
         Console.WriteLine(message);
         return Console.ReadLine() ?? string.Empty;
     }
 
-    static bool PromptYesNo(string message)
-    {
-        string response = PromptMessage($"{message} (y/n)");
-        return response.ToLower() == "y";
-    }
-
-    static int PromptInt(string message)
+    static int GetDimension(string message)
     {
         int result;
         while (true)
         {
-            string input = PromptMessage(message);
-            if (int.TryParse(input, out result))
+            if (int.TryParse(Prompt(message), out result))
             {
                 return result;
             }
+
             Console.WriteLine("Invalid input. Please enter a valid integer.");
         }
     }
